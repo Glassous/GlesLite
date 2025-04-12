@@ -1,0 +1,40 @@
+# Android Studio / IntelliJ IDEA
+*.iml
+.idea/
+.idea/*
+*.ipr
+*.iws
+
+# Gradle
+.gradle/
+build/
+.gradle
+local.properties
+
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Log Files
+*.log
+
+# Miscellaneous
+.DS_Store
+*.swp
+*~
+*.bak
+
+# Dependency directories
+/bin/
+/gen/
+/out/
+
+# Proguard
+proguard/
+
+# Sensitive files
+keystore.properties
+google-services.json

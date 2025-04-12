@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- 返回键 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/backButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:icon="@drawable/ic_arrow_left"
+        app:iconTint="@color/white"
+        app:backgroundTint="@color/neutral_gray"
+        app:cornerRadius="20dp"
+        app:rippleColor="@color/ripple_gray"
+        android:padding="0dp"
+        android:contentDescription="返回"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 当前浏览网页 -->
+    <TextView
+        android:id="@+id/currentPageLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="当前浏览网页"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_dark"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/backButton"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/currentPageTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="网页标题"
+        android:textSize="16sp"
+        android:textColor="@color/text_dark"
+        android:maxLines="1"
+        android:ellipsize="end"
+        app:layout_constraintTop_toBottomOf="@id/currentPageLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/addFavoriteButton" />
+
+    <TextView
+        android:id="@+id/currentPageUrl"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="网页 URL"
+        android:textSize="14sp"
+        android:textColor="@color/hint_gray"
+        android:maxLines="1"
+        android:ellipsize="end"
+        app:layout_constraintTop_toBottomOf="@id/currentPageTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/addFavoriteButton" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/addFavoriteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:text="一键收藏"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/apple_blue"
+        app:cornerRadius="12dp"
+        app:rippleColor="@color/apple_green"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintBaseline_toBaselineOf="@id/currentPageTitle"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 收藏列表 -->
+    <TextView
+        android:id="@+id/favoritesLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="收藏列表"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_dark"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/currentPageUrl"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- “？”帮助按钮（恢复原始位置，修复图标居中） -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/helpButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        app:icon="@drawable/ic_help"
+        app:iconTint="@color/neutral_gray"
+        android:background="@android:color/transparent"
+        app:rippleColor="@color/ripple_gray"
+        android:padding="0dp"
+        android:contentDescription="帮助"
+        app:layout_constraintBaseline_toBaselineOf="@id/favoritesLabel"
+        app:layout_constraintStart_toEndOf="@id/favoritesLabel"
+        android:layout_marginStart="8dp" />
+
+    <!-- 新增自定义页面按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/addCustomFavoriteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:text="新增自定义页面"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/apple_blue"
+        app:cornerRadius="12dp"
+        app:rippleColor="@color/apple_green"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintBaseline_toBaselineOf="@id/favoritesLabel"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 收藏列表 RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/favoritesRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/rounded_white_background"
+        app:layout_constraintTop_toBottomOf="@id/favoritesLabel"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:padding="8dp"
+        tools:listitem="@layout/item_favorite" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

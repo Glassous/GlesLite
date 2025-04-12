@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">GlesLite</string>
+    <string name="collapse_top_bar">收起顶部栏</string>
+    <string name="expand_top_bar">展开顶部栏</string>
+    <string name="toggle_menu">展开/收起菜单</string>
+    <string name="clear">清除</string>
+    <string name="go">前往</string>
+    <string name="forward">前进</string>
+    <string name="back">后退</string>
+    <string name="refresh">刷新</string>
+    <string name="settings">设置</string>
+    <string name="close_fullscreen">关闭全屏</string>
+    <string name="enter_url_or_search">输入网址</string>
+    <string name="data_management">数据管理</string>
+    <string name="clear_all_history">清空历史记录</string>
+    <string name="save_cookies">保存 Cookies</string>
+    <string name="save_history">保存浏览记录</string>
+    <string name="clear_cookies">清除 Cookies</string>
+    <string name="clear_cache">清除缓存</string>
+    <string name="cache_size">缓存大小：%s</string>
+    <string name="import_history">导入历史记录</string>
+    <string name="data_settings">设置</string>
+    <string name="cookie_management">Cookie 管理</string>
+    <string name="cache_management">缓存管理</string>
+    <string name="history_management">历史记录</string>
+    <string name="browsing_history">清空历史记录</string>
+    <string name="export_history">导出历史记录</string>
+</resources>

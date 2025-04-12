@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.GlesLite" parent="Theme.Material3.Light.NoActionBar">
+        <!-- 黑白灰配色 -->
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorOnPrimary">@color/light_on_primary</item>
+        <item name="colorPrimaryContainer">@color/light_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/light_on_primary_container</item>
+
+        <item name="colorSecondary">@color/light_secondary</item>
+        <item name="colorOnSecondary">@color/light_on_secondary</item>
+        <item name="colorOnBackground">@color/light_on_background</item>
+        <item name="colorSurface">@color/light_surface</item>
+        <item name="colorOnSurface">@color/light_on_surface</item>
+
+        <item name="colorError">@color/light_error</item>
+        <item name="colorOnError">@color/light_on_error</item>
+    </style>
+
+    <style name="Theme.GlesLite" parent="Base.Theme.GlesLite" />
+</resources>

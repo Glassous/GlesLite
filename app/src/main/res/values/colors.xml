@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+<color name="neutral_gray">#8E8E93</color>
+<color name="white">#FFFFFF</color>
+<color name="black">#FF000000</color>
+<color name="apple_blue">#007AFF</color>
+<color name="apple_green">#34C759</color>
+<color name="light_gray">#E0E0E0</color>
+<color name="ripple_gray">#D1D1D6</color>
+<color name="text_dark">#1C2526</color>
+<color name="hint_gray">#8A8A8E</color>
+<color name="light_primary">#212121</color> <!-- 深灰 -->
+<color name="light_on_primary">#FFFFFF</color>
+<color name="light_primary_container">#E0E0E0</color>
+<color name="light_on_primary_container">#000000</color>
+<color name="light_secondary">#424242</color>
+<color name="light_on_secondary">#FFFFFF</color>
+<color name="light_background">#FFFFFF</color>
+<color name="light_on_background">#000000</color>
+<color name="light_surface">#F5F5F5</color>
+<color name="light_on_surface">#212121</color>
+<color name="light_error">#B00020</color>
+<color name="light_on_error">#FFFFFF</color>
+<color name="dark_primary">#E0E0E0</color> <!-- 浅灰 -->
+<color name="dark_on_primary">#000000</color>
+<color name="dark_primary_container">#424242</color>
+<color name="dark_on_primary_container">#FFFFFF</color>
+<color name="dark_secondary">#BDBDBD</color>
+<color name="dark_on_secondary">#000000</color>
+<color name="dark_background">#121212</color> <!-- 深黑背景 -->
+<color name="dark_on_background">#FFFFFF</color>
+<color name="dark_surface">#1E1E1E</color>
+<color name="dark_on_surface">#FFFFFF</color>
+<color name="dark_error">#CF6679</color>
+<color name="dark_on_error">#000000</color>
+</resources>
