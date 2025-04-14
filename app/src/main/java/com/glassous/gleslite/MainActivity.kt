@@ -1,9 +1,19 @@
 package com.glassous.gleslite
 
+import android.Manifest
+import android.app.DownloadManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -15,9 +25,18 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.glassous.gleslite.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
+import java.net.HttpURLConnection
+import java.net.URL
+import java.text.DecimalFormat
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,6 +50,14 @@ class MainActivity : AppCompatActivity() {
     private var isButtonContainerExpanded = true
     private lateinit var historyManager: HistoryManager
     private var historyIdCounter = 0
+
+    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            Toast.makeText(this, "通知权限已授予", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "通知权限被拒绝，无法显示下载通知", Toast.LENGTH_LONG).show()
+        }
+    }
 
     private val favoritesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -62,6 +89,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val downloadManagementLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { /* 无需处理结果 */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -70,6 +99,9 @@ class MainActivity : AppCompatActivity() {
         (application as App).mainActivity = WeakReference(this)
         sharedPreferences = getSharedPreferences("AppSettings", MODE_PRIVATE)
         historyManager = HistoryManager(this)
+
+        createNotificationChannel()
+        requestNotificationPermission()
 
         savedInstanceState?.let {
             isFullscreen = it.getBoolean("isFullscreen", false)
@@ -90,6 +122,28 @@ class MainActivity : AppCompatActivity() {
         binding?.urlBar?.post {
             updateUrlBarVisibility(false)
             updateButtonContainerState(false)
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = getString(R.string.notification_channel_name)
+            val descriptionText = getString(R.string.notification_channel_description)
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel("DOWNLOAD_CHANNEL", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
 
@@ -150,7 +204,113 @@ class MainActivity : AppCompatActivity() {
                     exitFullscreen()
                 }
             }
+
+            setDownloadListener { url, _, _, mimeType, _ ->
+                GlobalScope.launch(Dispatchers.IO) {
+                    val fileSize = getFileSize(url)
+                    val fileName = url.substringAfterLast("/", "unknown_file")
+                    runOnUiThread {
+                        showDownloadConfirmDialog(url, fileName, fileSize, mimeType)
+                    }
+                }
+            }
         }
+    }
+
+    private fun getFileSize(url: String): String {
+        try {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "HEAD"
+            connection.connect()
+            val length = connection.contentLengthLong
+            connection.disconnect()
+            return if (length > 0) formatFileSize(length) else getString(R.string.download_size_unknown)
+        } catch (e: Exception) {
+            Log.e("FileSize", "Error fetching file size: ${e.message}")
+            return getString(R.string.download_size_unknown)
+        }
+    }
+
+    private fun formatFileSize(bytes: Long): String {
+        val units = arrayOf("B", "KB", "MB", "GB")
+        var size = bytes.toDouble()
+        var unitIndex = 0
+        while (size >= 1024 && unitIndex < units.size - 1) {
+            size /= 1024
+            unitIndex++
+        }
+        return "${DecimalFormat("#.##").format(size)} ${units[unitIndex]}"
+    }
+
+    private fun showDownloadConfirmDialog(url: String, fileName: String, fileSize: String, mimeType: String?) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.download_confirm_title)
+            .setMessage(getString(R.string.download_confirm_message, fileName, fileSize))
+            .setPositiveButton(R.string.download_confirm_yes) { _, _ ->
+                startDownload(url, fileName, mimeType)
+            }
+            .setNegativeButton(R.string.download_confirm_no) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(true)
+            .show()
+    }
+
+    private fun startDownload(url: String, fileName: String, mimeType: String?) {
+        try {
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                setMimeType(mimeType)
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                setTitle(fileName)
+                // 使用描述字段标记本应用的下载任务
+                setDescription("AppDownload:$packageName")
+            }
+            val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            val downloadId = downloadManager.enqueue(request)
+
+            // 保存下载信息以支持暂停/恢复
+            sharedPreferences.edit()
+                .putString("download_${downloadId}_url", url)
+                .putString("download_${downloadId}_fileName", fileName)
+                .putString("download_${downloadId}_mimeType", mimeType)
+                .apply()
+
+            // 显示自定义通知
+            showDownloadNotification(downloadId, fileName, 0)
+
+            Toast.makeText(this, "开始下载 $fileName", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "下载失败：${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showDownloadNotification(downloadId: Long, fileName: String, progress: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val intent = Intent(this, DownloadManagementActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            downloadId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, "DOWNLOAD_CHANNEL")
+            .setSmallIcon(R.drawable.ic_download)
+            .setContentTitle(fileName)
+            .setContentText(getString(R.string.notification_download_progress, fileName))
+            .setProgress(100, progress, progress == 0)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setAutoCancel(false)
+            .build()
+
+        notificationManager.notify(downloadId.toInt(), notification)
     }
 
     private fun setupButtons() {
@@ -166,6 +326,7 @@ class MainActivity : AppCompatActivity() {
         binding?.refreshButton?.setOnClickListener { binding?.webView?.reload() }
         binding?.settingsButton?.setOnClickListener { settingsLauncher.launch(Intent(this, SettingsActivity::class.java)) }
         binding?.dataManagementButton?.setOnClickListener { dataManagementLauncher.launch(Intent(this, DataManagementActivity::class.java)) }
+        binding?.downloadManagementButton?.setOnClickListener { downloadManagementLauncher.launch(Intent(this, DownloadManagementActivity::class.java)) }
 
         binding?.toggleUrlBarButton?.setOnClickListener {
             isUrlBarVisible = !isUrlBarVisible
@@ -229,6 +390,7 @@ class MainActivity : AppCompatActivity() {
             binding?.backButton?.visibility = View.VISIBLE
             binding?.refreshButton?.visibility = View.VISIBLE
             binding?.dataManagementButton?.visibility = View.VISIBLE
+            binding?.downloadManagementButton?.visibility = View.VISIBLE
             binding?.settingsButton?.visibility = View.VISIBLE
             if (animate) {
                 listOfNotNull(
@@ -236,6 +398,7 @@ class MainActivity : AppCompatActivity() {
                     binding?.backButton,
                     binding?.refreshButton,
                     binding?.dataManagementButton,
+                    binding?.downloadManagementButton,
                     binding?.settingsButton
                 ).forEachIndexed { index, button ->
                     button.alpha = 0f
@@ -253,6 +416,7 @@ class MainActivity : AppCompatActivity() {
                     binding?.backButton,
                     binding?.refreshButton,
                     binding?.dataManagementButton,
+                    binding?.downloadManagementButton,
                     binding?.settingsButton
                 ).forEach { button ->
                     button.alpha = 1f
@@ -264,6 +428,7 @@ class MainActivity : AppCompatActivity() {
             if (animate) {
                 listOfNotNull(
                     binding?.settingsButton,
+                    binding?.downloadManagementButton,
                     binding?.dataManagementButton,
                     binding?.refreshButton,
                     binding?.backButton,
@@ -284,6 +449,7 @@ class MainActivity : AppCompatActivity() {
                 binding?.backButton?.visibility = View.GONE
                 binding?.refreshButton?.visibility = View.GONE
                 binding?.dataManagementButton?.visibility = View.GONE
+                binding?.downloadManagementButton?.visibility = View.GONE
                 binding?.settingsButton?.visibility = View.GONE
             }
         }
@@ -438,10 +604,12 @@ class MainActivity : AppCompatActivity() {
         favoritesLauncher.unregister()
         dataManagementLauncher.unregister()
         settingsLauncher.unregister()
+        downloadManagementLauncher.unregister()
+        notificationPermissionLauncher.unregister()
         (application as App).mainActivity = null
     }
 
-    private fun cancelAllAnimations() {
+    fun cancelAllAnimations() {
         binding?.urlBar?.animate()?.cancel()
         binding?.fullscreenContainer?.animate()?.cancel()
         listOfNotNull(
@@ -449,6 +617,7 @@ class MainActivity : AppCompatActivity() {
             binding?.backButton,
             binding?.refreshButton,
             binding?.dataManagementButton,
+            binding?.downloadManagementButton,
             binding?.settingsButton
         ).forEach { it.animate()?.cancel() }
     }

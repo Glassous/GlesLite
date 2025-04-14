@@ -214,6 +214,22 @@
             android:tooltipText="@string/data_management" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/downloadManagementButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:src="@drawable/ic_download"
+            app:backgroundTint="#8E8E93"
+            app:rippleColor="#D1D1D6"
+            app:fabCustomSize="48dp"
+            app:elevation="0dp"
+            app:pressedTranslationZ="0dp"
+            android:scaleType="center"
+            android:alpha="0.6"
+            android:contentDescription="@string/download_management"
+            android:tooltipText="@string/download_management" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/settingsButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
